@@ -1,0 +1,64 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+os: Visual Studio 2015
+
+skip_tags: true
+
+environment:
+  ARCH: "64"
+  GENERATOR: Visual Studio 14 2015 Win64
+  NUMPY: "1.13"
+  PYTHON: "3.5"
+  MSVC_DEFAULT_OPTIONS: ON
+  ARROW_SRC: C:\apache-arrow
+  PYARROW_VERSION: 0.9.1.dev451
+  PYARROW_REF: abc5da46a0afaa43f0655ffee5b00b93e3a85464
+  PARQUET_CPP_REF: apache-parquet-cpp-1.4.0
+
+init:
+  - set MINICONDA=C:\Miniconda35-x64
+  - set PATH=%MINICONDA%;%MINICONDA%/Scripts;%MINICONDA%/Library/bin;%PATH%
+
+install:
+  # Clone git repository
+  - git clone -b ARROW-2910 https://github.com/kszucs/arrow %ARROW_SRC% || exit /B
+  - git -C %ARROW_SRC% checkout abc5da46a0afaa43f0655ffee5b00b93e3a85464 || exit /B
+
+build_script:
+  - mkdir wheels
+  - call %ARROW_SRC%\dev\tasks\python-wheels\win-build.bat
+
+after_build:
+  xcopy %ARROW_SRC%\python\dist\* wheels\
+
+artifacts:
+  - path: wheels\*.whl
+
+deploy:
+  release: build-281-wheel-win-cp35m
+  provider: GitHub
+  auth_token: "%CROSSBOW_GITHUB_TOKEN%"
+  artifact: /.*\.whl/
+  draft: false
+  prerelease: false
+
+
+notifications:
+  - provider: Email
+    to:
+      - szucs.krisztian@gmail.com
