@@ -1,0 +1,63 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+os: linux
+dist: trusty
+sudo: required
+language: cpp
+services:
+  - docker
+
+# don't build twice
+if: tag IS blank
+
+env:
+  global:
+    - PLAT=x86_64
+    - TRAVIS_TAG=build-285-wheel-linux-cp36m
+    - PYTHON_VERSION=3.6,16
+    - PYARROW_VERSION=0.10.0
+
+before_install:
+  # Clone git repository
+  - git clone -b ARROW-2910 https://github.com/kszucs/arrow arrow
+  - git -C arrow checkout fae46ace3cb0183c42fec4911a24144e18138892
+
+install:
+  - docker pull quay.io/xhochy/arrow_manylinux1_x86_64_base:latest
+
+script:
+  - mkdir -p dist
+  - docker build -t arrow-base-x86_64 -f arrow/python/manylinux1/Dockerfile-x86_64 .
+  - docker run --shm-size=2g --rm
+      -e SETUPTOOLS_SCM_PRETEND_VERSION=$PYARROW_VERSION
+      -e PYTHON_VERSIONS=$PYTHON_VERSION
+      -v $PWD:/io arrow-base-x86_64
+      /arrow/python/manylinux1/build_arrow.sh
+
+deploy:
+  provider: releases
+  api_key: $CROSSBOW_GITHUB_TOKEN
+  file_glob: true
+  file: dist/*.whl
+  skip_cleanup: true
+  on:
+    tags: true
+
+
+notifications:
+  email:
+    - szucs.krisztian@gmail.com
