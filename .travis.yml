@@ -1,0 +1,27 @@
+sudo: required
+
+services:
+  - docker
+
+env:
+  global:
+    - DOCKER_COMPOSE_VERSION=1.22.0
+
+before_install:
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
+  - docker -v
+  - docker-compose -v
+
+before_script:
+  - git clone -b master https://github.com/kszucs/arrow arrow
+  - cd arrow
+  - git checkout 54634dd6745dccad393c1461f11a787047dbc41a
+  - git submodule update --init --recursive
+
+script:
+  - docker-compose build cpp
+  - docker-compose build c_glib
+  - docker-compose run cpp
