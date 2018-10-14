@@ -1,0 +1,31 @@
+sudo: required
+
+services:
+  - docker
+
+cache:
+  directories:
+    - $HOME/arrow_docker_cache
+
+env:
+  global:
+    - DOCKER_COMPOSE_VERSION=1.22.0
+    - ARROW_DOCKER_CACHE_DIR=$HOME/arrow_docker_cache
+
+before_install:
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
+  - docker -v
+  - docker-compose -v
+
+before_script:
+  - git clone -b ARROW-3506 https://github.com/kszucs/arrow arrow
+  - cd arrow
+  - git checkout 9ba6459dd63f64a6e90c601bbe6aeb26c2eac226
+  - git submodule update --init --recursive
+
+script:
+  - docker-compose build java
+  - docker-compose run java
