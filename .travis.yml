@@ -1,0 +1,24 @@
+sudo: required
+
+services:
+  - docker
+
+env:
+  - DOCKER_COMPOSE_VERSION=1.22.0
+  - PYTHON_VERSION=2.7
+
+before_install:
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
+  - docker -v
+  - docker-compose -v
+
+script:
+  - git clone -b master https://github.com/kszucs/arrow arrow
+  - git -C arrow checkout 54634dd6745dccad393c1461f11a787047dbc41a
+  - pushd arrow
+  - docker-compose build cpp
+  - docker-compose build python
+  - docker-compose run python
