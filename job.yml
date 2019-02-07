@@ -1,0 +1,306 @@
+!Job
+target: !Target
+  head: c81fbaa20ce4d14ae08bbb2f4a959778f1069d83
+  email: travis@example.org
+  branch: master
+  remote: https://github.com/apache/arrow
+  version: 0.12.1.dev139
+  no_rc_version: 0.12.1.dev139
+tasks:
+  docker-r: !Task
+    platform: linux
+    template: docker-tests/travis.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - docker-compose build cpp
+      - docker-compose build r
+      - docker-compose run r
+
+    branch: nightly-285-docker-r
+    commit: e3be9d819a83d816ddf379181dc624e684630a64
+  docker-c_glib: !Task
+    platform: linux
+    template: docker-tests/travis.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - docker-compose build cpp
+      - docker-compose build c_glib
+      - docker-compose run cpp
+
+    branch: nightly-285-docker-c_glib
+    commit: 24b952fb94c48077ea934572b2bccf866b987dba
+  docker-clang-format: !Task
+    platform: linux
+    template: docker-tests/travis.linux.yml
+    artifacts: []
+    params:
+      environment:
+        PYTHON_VERSION: 3.6
+      commands:
+      - docker-compose build cpp
+      - docker-compose build python
+      - docker-compose build lint
+      - docker-compose run clang-format
+
+  ############################## Integration tests ############################
+
+    branch: nightly-285-docker-clang-format
+    commit: eab3abefbf88bfce4736fde0f50253f14f4dfe38
+  docker-lint: !Task
+    platform: linux
+    template: docker-tests/travis.linux.yml
+    artifacts: []
+    params:
+      environment:
+        PYTHON_VERSION: 3.6
+      commands:
+      - docker-compose build cpp
+      - docker-compose build python
+      - docker-compose build lint
+      - docker-compose run lint
+
+    branch: nightly-285-docker-lint
+    commit: 72843d90bc4eebe4acc2cdc3d830670ff80ec5a2
+  docker-go: !Task
+    platform: linux
+    template: docker-tests/travis.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - docker-compose build go
+      - docker-compose run go
+
+    branch: nightly-285-docker-go
+    commit: 4ee48867c2bb0712c5327085e8ceb539da2132e1
+  docker-spark-integration: !Task
+    platform: linux
+    template: docker-tests/travis.linux.yml
+    artifacts: []
+    params:
+      environment:
+        PYTHON_VERSION: 3.6
+      commands:
+      - docker-compose build cpp
+      - docker-compose build python
+      - docker-compose build spark-integration
+      - docker-compose run spark-integration
+
+    branch: nightly-285-docker-spark-integration
+    commit: 0e2b3c2d364bd9195614d046903955383e57a9ed
+  docker-js: !Task
+    platform: linux
+    template: docker-tests/travis.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - docker-compose build js
+      - docker-compose run js
+
+    branch: nightly-285-docker-js
+    commit: dba1adc26a43960538f41349835253734d3534c3
+  docker-pandas-master: !Task
+    platform: linux
+    template: docker-tests/travis.linux.yml
+    artifacts: []
+    params:
+      environment:
+        PYTHON_VERSION: 3.6
+      commands:
+      - docker-compose build cpp
+      - docker-compose build python
+      - docker-compose build --no-cache pandas-master
+      - docker-compose run pandas-master
+    branch: nightly-285-docker-pandas-master
+    commit: 2cb1a86017d809200b4983937c4ed051f009c4bf
+  docker-python-2.7-alpine: !Task
+    platform: linux
+    template: docker-tests/travis.linux.yml
+    artifacts: []
+    params:
+      environment:
+        PYTHON_VERSION: 2.7
+      commands:
+      - docker-compose build cpp-alpine
+      - docker-compose build python-alpine
+      - docker-compose run python-alpine
+
+    branch: nightly-285-docker-python-2.7-alpine
+    commit: 71b773bb7a8da59e14e6c9a9fdf28b4f6f95a2f3
+  docker-python-3.7: !Task
+    platform: linux
+    template: docker-tests/travis.linux.yml
+    artifacts: []
+    params:
+      environment:
+        PYTHON_VERSION: 3.7
+      commands:
+      - docker-compose build cpp
+      - docker-compose build python
+      - docker-compose run python
+
+    branch: nightly-285-docker-python-3.7
+    commit: 1fb3bea7f5b68b2472c24ab43e1c51c8cc06207f
+  docker-python-2.7: !Task
+    platform: linux
+    template: docker-tests/travis.linux.yml
+    artifacts: []
+    params:
+      environment:
+        PYTHON_VERSION: 2.7
+      commands:
+      - docker-compose build cpp
+      - docker-compose build python
+      - docker-compose run python
+
+    branch: nightly-285-docker-python-2.7
+    commit: 6d55838f5d1f91a95f35417a948c60efc0997b0c
+  docker-python-3.6: !Task
+    platform: linux
+    template: docker-tests/travis.linux.yml
+    artifacts: []
+    params:
+      environment:
+        PYTHON_VERSION: 3.6
+      commands:
+      - docker-compose build cpp
+      - docker-compose build python
+      - docker-compose run python
+
+    branch: nightly-285-docker-python-3.6
+    commit: 4902a7187f4f8940794e2469a605d235e5057f07
+  docker-cpp-alpine: !Task
+    platform: linux
+    template: docker-tests/travis.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - docker-compose build cpp-alpine
+      - docker-compose run cpp-alpine
+
+    branch: nightly-285-docker-cpp-alpine
+    commit: fc6e1981c8fa9a3fff13c57380981011db36176a
+  docker-docs: !Task
+    platform: linux
+    template: docker-tests/travis.linux.yml
+    artifacts: []
+    params:
+      environment:
+        PYTHON_VERSION: 3.6
+      commands:
+      - docker-compose build cpp
+      - docker-compose build python
+      - docker-compose build docs
+      - docker-compose run docs
+
+  ############################## Linter tests #################################
+
+    branch: nightly-285-docker-docs
+    commit: ac3fe1010cd330804a111ae1596f9de7c7cab03e
+  docker-iwyu: !Task
+    platform: linux
+    template: docker-tests/travis.linux.yml
+    artifacts: []
+    params:
+      environment:
+        PYTHON_VERSION: 3.6
+      commands:
+      - docker-compose build cpp
+      - docker-compose build python
+      - docker-compose build lint
+      - docker-compose run iwyu
+
+    branch: nightly-285-docker-iwyu
+    commit: f2a7a80438a24da29c8fa4c591990dfd4d3ebc44
+  docker-python-3.6-alpine: !Task
+    platform: linux
+    template: docker-tests/travis.linux.yml
+    artifacts: []
+    params:
+      environment:
+        PYTHON_VERSION: 3.6
+      commands:
+      - docker-compose build cpp-alpine
+      - docker-compose build python-alpine
+      - docker-compose run python-alpine
+
+  ###################### Documentation building tests #########################
+
+    branch: nightly-285-docker-python-3.6-alpine
+    commit: b0e1baf5446c2a985c8253e8aa5145ee2071840e
+  docker-rust: !Task
+    platform: linux
+    template: docker-tests/travis.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - docker-compose build rust
+      - docker-compose run rust
+
+    branch: nightly-285-docker-rust
+    commit: 061ec6f7d7199b66a8ad6a93c35b521c2b5f31f1
+  docker-cpp: !Task
+    platform: linux
+    template: docker-tests/travis.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - docker-compose build cpp
+      - docker-compose run cpp
+
+    branch: nightly-285-docker-cpp
+    commit: 9739a48c99874c263250928533c1bbefbe8c74ee
+  docker-dask-integration: !Task
+    platform: linux
+    template: docker-tests/travis.linux.yml
+    artifacts: []
+    params:
+      environment:
+        PYTHON_VERSION: 3.6
+      commands:
+      - docker-compose build cpp
+      - docker-compose build python
+      - docker-compose build dask-integration
+      - docker-compose run dask-integration
+
+    branch: nightly-285-docker-dask-integration
+    commit: b8d6c1bcaea614b773d3648c983d1fb038cca14c
+  docker-hdfs-integration: !Task
+    platform: linux
+    template: docker-tests/travis.linux.yml
+    artifacts: []
+    params:
+      environment:
+        PYTHON_VERSION: 3.6
+      commands:
+      - docker-compose build cpp
+      - docker-compose build python
+      - docker-compose build hdfs-integration
+      - docker-compose run hdfs-integration
+
+    branch: nightly-285-docker-hdfs-integration
+    commit: d3463b5caa05c9a136c24cfcb94de9dba47f59b7
+  docker-java: !Task
+    platform: linux
+    template: docker-tests/travis.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - docker-compose build java
+      - docker-compose run java
+
+    branch: nightly-285-docker-java
+    commit: 68d936bed069b4e4e8c04cdeffb910bcbf13c227
+  docker-cpp-cmake32: !Task
+    platform: linux
+    template: docker-tests/travis.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - docker-compose build cpp-cmake32
+      - docker-compose run cpp-cmake32
+
+    branch: nightly-285-docker-cpp-cmake32
+    commit: 83e663cf86567c36e6a3b67899f9ade2a98081d0
+branch: nightly-285
