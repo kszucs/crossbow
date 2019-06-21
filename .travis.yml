@@ -1,0 +1,60 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+os: linux
+dist: xenial
+language: ruby
+
+services:
+  - docker
+
+# don't build twice
+if: tag IS blank
+
+env:
+  global:
+    - TRAVIS_TAG=ursabot-48-travis-debian-stretch
+    - BUILD_REF=825b39feede5344d4f276be4f5568e25f867e573
+    - ARROW_VERSION=0.13.0.dev459
+
+before_script:
+  - git clone --no-checkout https://github.com/apache/arrow arrow
+  - git -C arrow fetch -t https://github.com/apache/arrow refs/pull/4655/merge
+  - git -C arrow checkout 825b39feede5344d4f276be4f5568e25f867e573
+
+script:
+  - pushd arrow/dev/tasks/linux-packages
+  - rake version:update
+  - rake dist
+  - rake apt:build APT_TARGETS=debian-stretch
+
+deploy:
+  provider: releases
+  api_key: $CROSSBOW_GITHUB_TOKEN
+  file_glob: true
+  file:
+  - "**/*.deb"
+  - "**/*.dsc"
+  - "**/*.debian.tar.xz"
+  - "**/*.orig.tar.gz"
+  skip_cleanup: true
+  on:
+    tags: true
+
+notifications:
+  email:
+    - ursabot@ci.ursalabs.org
