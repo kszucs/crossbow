@@ -1,0 +1,74 @@
+jobs:
+- job: linux
+  pool:
+    vmImage: ubuntu-16.04
+  timeoutInMinutes: 360
+
+  variables:
+    CONFIG: linux_python3.7
+    ARROW_VERSION: 0.13.0.dev475
+    DOCKER_IMAGE: condaforge/linux-anvil-comp7
+    UPLOAD_PACKAGES: False
+
+  steps:
+  # configure qemu binfmt-misc running.  This allows us to run docker containers
+  # embedded qemu-static
+  # - script: |
+  #     docker run --rm --privileged multiarch/qemu-user-static:register --reset --credential yes
+  #     ls /proc/sys/fs/binfmt_misc/
+  #   displayName: Configure binfmt_misc
+  #   condition: not(startsWith(variables['CONFIG'], 'linux_64'))
+  #
+  # - script: |
+  #     git clone --no-checkout https://github.com/kszucs/arrow arrow
+  #     git -C arrow fetch -t https://github.com/kszucs/arrow crossbow-azure
+  #     git -C arrow checkout 44a46ad2262592e06074df35a9338d68233b1114
+  #   displayName: Clone arrow
+  #
+  # - script: CI=azure ./run_docker_build.sh
+  #   displayName: Run docker build
+  #   workingDirectory: arrow/dev/tasks/conda-recipes
+
+  - script: |
+      mkdir -p arrow/dev/tasks/conda-recipes/build_artifacts
+      echo "test1" >> arrow/dev/tasks/conda-recipes/build_artifacts/test1.txt
+      echo "test2" >> arrow/dev/tasks/conda-recipes/build_artifacts/test2.txt
+
+  - script: |
+      pip install requests
+      python -c "import requests"
+
+  # Using github release tries to find a common ancestor between the currently
+  # pushed tag and the latest tag of the github repository (don't know why).
+  # The tag upload took 43 minutes because of this scanning, so use an
+  # alternative upload script.
+  # - script: |
+  #     for f in build_artifacts/*.txt; do
+  #       echo "Uploading $(basename $f)..."
+  #       curl \
+  #         --fail \
+  #         -H "Authorization: token $(CROSSBOW_GITHUB_TOKEN)" \
+  #         -H "Content-Type: $(file -b --mime-type $f)" \
+  #         --data-binary @$f \
+  #         "https://uploads.github.com/repos/$(Build.Repository.Name)/releases/build-633-azure-conda-linux-gcc-py37/assets?name=$(basename $f)"
+  #     done
+  #   env:
+  #     CROSSBOW_GITHUB_TOKEN: $(CROSSBOW_GITHUB_TOKEN)
+  #     CROSSBOW_GITHUB_REPOSITORY: $(Build.Repository.Name)
+  #   displayName: Upload packages to github releases
+  #   workingDirectory: arrow/dev/tasks/conda-recipes
+
+
+  # - task: GitHubRelease@0
+  #   displayName: Upload packages to github releases
+  #   inputs:
+  #     gitHubConnection: crossbow-release
+  #     target: 'None'
+  #     action: 'create'
+  #     tagSource: 'manual'
+  #     tag: 'build-633-azure-conda-linux-gcc-py37'
+  #     idDraft: false
+  #     isPreRelease: false
+  #     addChangeLog: false
+  #     assetUploadMode: 'delete'
+  #     assets: arrow/dev/tasks/conda-recipes/build_artifacts/*.tar.bz2
