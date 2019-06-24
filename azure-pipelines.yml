@@ -1,0 +1,29 @@
+jobs:
+- job: linux
+  pool:
+    vmImage: ubuntu-16.04
+  timeoutInMinutes: 360
+
+  steps:
+  - task: DockerInstaller@0
+    displayName: Docker Installer
+    inputs:
+      dockerVersion: 17.09.0-ce
+      releaseType: stable
+
+  - script: |
+      git clone --no-checkout https://github.com/kszucs/arrow arrow
+      git -C arrow fetch -t https://github.com/kszucs/arrow crossbow-azure
+      git -C arrow checkout b9d66cf716f95e28d3cc003406cc9b3155293726
+      git -C arrow submodule update --init --recursive
+    displayName: Clone arrow
+
+  - script: |
+      pushd arrow
+        docker-compose build cpp
+        docker-compose build python
+        docker-compose build python-nopandas
+        docker-compose run python-nopandas
+      popd
+    workingDirectory: arrow
+    displayName: Run docker test
