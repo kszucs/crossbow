@@ -1,0 +1,67 @@
+jobs:
+- job: osx
+  pool:
+    vmImage: macOS-10.13
+  timeoutInMinutes: 360
+  variables:
+    CONFIG: osx_python3.7
+    ARROW_VERSION: 0.13.0.dev467
+    UPLOAD_PACKAGES: False
+  steps:
+  - displayName: Remove homebrew
+    script: |
+      echo "Removing homebrew from Azure to avoid conflicts."
+      curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall > ~/uninstall_homebrew
+      chmod +x ~/uninstall_homebrew
+      ~/uninstall_homebrew -fq
+      rm ~/uninstall_homebrew
+
+  - displayName: Add conda to PATH
+    bash: |
+      echo "##vso[task.prependpath]$CONDA/bin"
+      sudo chown -R $USER $CONDA
+
+  - displayName: 'Add conda-forge-ci-setup=2'
+    script: |
+      source activate base
+      conda install -n base -c conda-forge --quiet --yes conda-forge-ci-setup=2 conda-build
+
+  - displayName: Clone arrow
+    script: |
+      git clone --no-checkout https://github.com/kszucs/arrow arrow
+      git -C arrow fetch -t https://github.com/kszucs/arrow crossbow-azure
+      git -C arrow checkout 865292d280508f99fe549368c70711269f7c2747
+
+  - displayName: Configure conda and conda-build
+    script: |
+      source activate base
+      echo "Configuring conda."
+
+      setup_conda_rc ./ ./ ./.ci_support/${CONFIG}.yaml
+      export CI=azure
+      source run_conda_forge_build_setup
+      conda update --yes --quiet --override-channels -c conda-forge -c defaults --all
+    workingDirectory: arrow/dev/tasks/conda-recipes
+    env: {
+      OSX_FORCE_SDK_DOWNLOAD: "1"
+    }
+
+  - displayName: Mangle compiler
+    workingDirectory: arrow/dev/tasks/conda-recipes
+    script: |
+      source activate base
+      mangle_compiler ./ ./ ./.ci_support/${CONFIG}.yaml
+
+  - displayName: Generate build number clobber file
+    workingDirectory: arrow/dev/tasks/conda-recipes
+    script: |
+      source activate base
+      make_build_number ./ ./ ./.ci_support/${CONFIG}.yaml
+
+  - displayName: Build recipes
+    workingDirectory: arrow/dev/tasks/conda-recipes
+    script: |
+      source activate base
+      conda build arrow-cpp parquet-cpp pyarrow \
+        -m ./.ci_support/${CONFIG}.yaml \
+        --clobber-file ./.ci_support/clobber_${CONFIG}.yaml
