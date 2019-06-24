@@ -1,0 +1,30 @@
+jobs:
+- job: linux
+  pool:
+    vmImage: ubuntu-16.04
+  timeoutInMinutes: 360
+
+  variables:
+    CONFIG: linux_python3.7
+    ARROW_VERSION: 0.13.0.dev473
+    DOCKER_IMAGE: condaforge/linux-anvil-comp7
+    UPLOAD_PACKAGES: False
+
+  steps:
+  # configure qemu binfmt-misc running.  This allows us to run docker containers
+  # embedded qemu-static
+  - script: |
+      docker run --rm --privileged multiarch/qemu-user-static:register --reset --credential yes
+      ls /proc/sys/fs/binfmt_misc/
+    displayName: Configure binfmt_misc
+    condition: not(startsWith(variables['CONFIG'], 'linux_64'))
+
+  - script: |
+      git clone --no-checkout https://github.com/kszucs/arrow arrow
+      git -C arrow fetch -t https://github.com/kszucs/arrow crossbow-azure
+      git -C arrow checkout 4d19f49318b6f65bb5009bece8eec6a146173f10
+    displayName: Clone arrow
+
+  - script: CI=azure ./run_docker_build.sh
+    displayName: Run docker build
+    workingDirectory: arrow/dev/tasks/conda-recipes
