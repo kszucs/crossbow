@@ -1,0 +1,60 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+os: linux
+dist: xenial
+language: ruby
+
+services:
+  - docker
+
+# don't build twice
+if: tag IS blank
+
+env:
+  global:
+    - TRAVIS_TAG=build-660-travis-ubuntu-disco
+    - BUILD_REF=a591d76ad9a657110368aa422bb00f4010cb6b6e
+    - ARROW_VERSION=0.14.0-rc0
+
+before_script:
+  - git clone --no-checkout https://github.com/kou/arrow.git arrow
+  - git -C arrow fetch -t https://github.com/kou/arrow.git apache-arrow-0.14.0-rc0
+  - git -C arrow checkout FETCH_HEAD
+
+script:
+  - pushd arrow/dev/tasks/linux-packages
+  - rake version:update
+  - rake dist
+  - rake apt:build APT_TARGETS=ubuntu-disco
+
+deploy:
+  provider: releases
+  api_key: $CROSSBOW_GITHUB_TOKEN
+  file_glob: true
+  file:
+  - "**/*.deb"
+  - "**/*.dsc"
+  - "**/*.debian.tar.xz"
+  - "**/*.orig.tar.gz"
+  skip_cleanup: true
+  on:
+    tags: true
+
+notifications:
+  email:
+    - kou@clear-code.com
