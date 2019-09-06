@@ -1,0 +1,46 @@
+jobs:
+- job: linux
+  pool:
+    vmImage: ubuntu-latest
+  timeoutInMinutes: 360
+  steps:
+    # for building the linux packages
+    - task: UseRubyVersion@0
+      inputs:
+        addToPath: true
+
+    - script: |
+        git clone --no-checkout https://github.com/kszucs/arrow arrow
+        git -C arrow fetch -t https://github.com/kszucs/arrow linux-packaging-azure
+        git -C arrow checkout FETCH_HEAD
+        git -C arrow submodule update --init --recursive
+      displayName: Clone arrow
+
+    # - script: |
+    #     pushd arrow/dev/tasks/linux-packages
+    #     rake version:update
+    #     rake dist
+    #     rake yum:build CENTOS_VERSIONS=6
+    #     popd
+
+    # Using github release tries to find a common ancestor between the
+    # currently pushed tag and the latest tag of the github repository
+    # (don't know why).
+    # The tag upload took 43 minutes because of this scan, so use an
+    # alternative upload script.
+    - task: CondaEnvironment@1
+      inputs:
+        packageSpecs: 'click github3.py jinja2 jira pygit2 ruamel.yaml setuptools_scm toolz'
+        installOptions: '-c conda-forge'
+        updateConda: false
+    - script: |
+        python crossbow.py --queue-path ../../.. upload-artifacts \
+          --sha build-685-azure-centos-6 \
+          --tag build-685-azure-centos-6 \
+          --pattern "**/*.rpm"
+        
+      env:
+        CROSSBOW_GITHUB_REPO: $(Build.Repository.Name)
+        CROSSBOW_GITHUB_TOKEN: $(CROSSBOW_GITHUB_TOKEN)
+      displayName: Upload packages as a GitHub release
+      workingDirectory: arrow/dev/tasks
