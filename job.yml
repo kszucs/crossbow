@@ -1,0 +1,30 @@
+!Job
+target: !Target
+  head: 872f7350d8921f157b095cc25e89b6a670b89885
+  email: ursabot@ci.ursalabs.org
+  branch: refs/pull/5485/merge
+  remote: https://github.com/apache/arrow
+  version: 0.14.0.dev652
+  no_rc_version: 0.14.0.dev652
+tasks:
+  docker-spark-integration: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      environment:
+        PYTHON_VERSION: 3.6
+      commands:
+      - docker-compose pull --ignore-pull-failures cpp
+      - docker-compose pull --ignore-pull-failures python
+      - docker-compose pull --ignore-pull-failures spark-integration
+      - docker-compose build cpp
+      - docker-compose build python
+      - docker-compose build spark-integration
+      - docker-compose run spark-integration
+      - docker-compose push --ignore-push-failures spark-integration
+
+    branch: ursabot-231-circle-docker-spark-integration
+    commit: 6c4d63b77a09b01eb60a766a147502def6df4c2f
+branch: ursabot-231
