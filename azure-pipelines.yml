@@ -1,0 +1,75 @@
+jobs:
+- job: osx
+  pool:
+    vmImage: macOS-10.13
+  timeoutInMinutes: 360
+  variables:
+    ARROW_VERSION: 0.15.0.dev154
+    UPLOAD_PACKAGES: False
+  steps:
+  - script: |
+      git clone --no-checkout https://github.com/kszucs/arrow arrow
+      git -C arrow fetch -t https://github.com/kszucs/arrow master
+      git -C arrow checkout FETCH_HEAD
+      git -C arrow submodule update --init --recursive
+    displayName: Clone arrow
+
+  - script: |
+      git clone https://github.com/matthew-brett/multibuild # TODO pin it
+      git -C multibuild checkout 4e7a9396e9a50731bb83fc0d16bb98fb0c4032d7
+    displayName: Clone Multibuild
+
+  - script: |
+      # Also remove artifacts that depend on Boost
+      brew uninstall boost cgal postgis sfcgal
+      brew update
+      brew upgrade cmake python
+      brew install bison flex grpc llvm@7 zlib gperftools libgit2
+    displayName: Dependency Hell
+
+  - script: |
+      rm -f /usr/local/opt/grpc/lib/*.dylib
+
+      export CONFIG_PATH=`pwd`/arrow/dev/tasks/python-wheels/osx-build.sh
+      source multibuild/common_utils.sh
+      source multibuild/travis_osx_steps.sh
+
+      before_install
+      # Fix SSL TLS issue for Python 3.5 on macOS
+      pip install requests[security]
+
+      build_wheel arrow
+
+      # things are properly statically-linked
+      brew uninstall --ignore-dependencies llvm@7 grpc c-ares openssl openssl@1.1 zlib gperftools
+      # install the built wheel and test dependencies
+      install_wheel arrow
+      # run unit tests before removing the system libraries
+      run_unit_tests arrow
+      # remove libz to ensure that it is properly bundled
+      sudo find /usr -name libz.* -delete
+      # run the import tests
+      run_import_tests
+    displayName: Build and Test wheel
+
+  # Using github release tries to find a common ancestor between the
+  # currently pushed tag and the latest tag of the github repository
+  # (don't know why).
+  # The tag upload took 43 minutes because of this scan, so use an
+  # alternative upload script.
+  - task: CondaEnvironment@1
+    inputs:
+      packageSpecs: 'click github3.py jinja2 jira pygit2 ruamel.yaml setuptools_scm toolz'
+      installOptions: '-c conda-forge'
+      updateConda: false
+  - script: |
+      python arrow/dev/tasks/crossbow.py \
+        --queue-path . \
+        --queue-remote https://github.com/ursa-labs/crossbow.git \
+        upload-artifacts \
+        --sha build-710-azure-wheel-osx-cp37m-azure \
+        --tag build-710-azure-wheel-osx-cp37m-azure \
+        --pattern "arrow/python/dist/*.whl"
+    env:
+      CROSSBOW_GITHUB_TOKEN: $(CROSSBOW_GITHUB_TOKEN)
+    displayName: Upload packages as a GitHub release
