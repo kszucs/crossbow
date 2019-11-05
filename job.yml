@@ -1,0 +1,614 @@
+!Job
+target: !Target
+  head: ac6b959dbe85bef340f3a30062d1ef28de8ca774
+  email: ursabot@ci.ursalabs.org
+  branch: refs/pull/5589/merge
+  remote: https://github.com/apache/arrow
+  version: 0.15.0.dev227
+  no_rc_version: 0.15.0.dev227
+tasks:
+  test-conda-python-3.7-turbodbc-master: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export PYTHON=3.7 TURBODBC=master
+      - docker-compose pull --ignore-pull-failures conda-cpp
+      - docker-compose pull --ignore-pull-failures conda-python
+      - docker-compose build conda-cpp
+      - docker-compose build conda-python
+      - docker-compose build --no-cache conda-python-turbodbc
+      - docker-compose run conda-python-turbodbc
+
+    branch: ursabot-304-circle-test-conda-python-3.7-turbodbc-master
+    commit: 75b777673474def1b1ef5ca3603b153898afe95a
+  test-ubuntu-16.04-cpp: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export UBUNTU=16.04
+      - docker-compose pull --ignore-pull-failures ubuntu-cpp
+      - docker-compose build ubuntu-cpp
+      - docker-compose run ubuntu-cpp
+      - docker-compose push --ignore-push-failures ubuntu-cpp
+
+    branch: ursabot-304-circle-test-ubuntu-16.04-cpp
+    commit: 51aed8e94bc48f7fb3a2a54ae2656a3cfde435ba
+  test-conda-python-2.7: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export PYTHON=2.7
+      - docker-compose pull --ignore-pull-failures conda-cpp
+      - docker-compose pull --ignore-pull-failures conda-python
+      - docker-compose build conda-cpp
+      - docker-compose build conda-python
+      - docker-compose build --no-cache conda-python
+      - docker-compose run conda-python
+
+    branch: ursabot-304-circle-test-conda-python-2.7
+    commit: e3fa55b1c852ee63f72d24d2694bbe06c351607b
+  test-ubuntu-fuzzit: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - docker-compose pull --ignore-pull-failures ubuntu-cpp
+      - docker-compose pull --ignore-pull-failures ubuntu-fuzzit
+      - docker-compose build ubuntu-cpp
+      - docker-compose build ubuntu-fuzzit
+      - docker-compose run ubuntu-fuzzit
+      - docker-compose push --ignore-push-failures ubuntu-fuzzit
+
+  ############################## Integration tests ############################
+
+    branch: ursabot-304-circle-test-ubuntu-fuzzit
+    commit: 8ee9a4e7a2a57c7b0107536b5ffbb1b314c6ae03
+  test-ubuntu-18.04-cpp-static: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - docker-compose pull --ignore-pull-failures ubuntu-cpp
+      - docker-compose build ubuntu-cpp
+      - docker-compose run -e ARROW_BUILD_SHARED=OFF -e ARROW_BUILD_STATIC=ON -e ARROW_TEST_LINKAGE=static
+        ubuntu-cpp
+      - docker-compose push --ignore-push-failures ubuntu-cpp
+
+    branch: ursabot-304-circle-test-ubuntu-18.04-cpp-static
+    commit: 0109d49838a6c193e02da8b16a96a3291da18506
+  test-ubuntu-c-glib: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - docker-compose pull --ignore-pull-failures ubuntu-cpp
+      - docker-compose pull --ignore-pull-failures ubuntu-c-glib
+      - docker-compose build ubuntu-cpp
+      - docker-compose build ubuntu-c-glib
+      - docker-compose run ubuntu-c-glib
+      - docker-compose push --ignore-push-failures ubuntu-c-glib
+
+    branch: ursabot-304-circle-test-ubuntu-c-glib
+    commit: afb91bb23117c05a2c8ff347d38a95be4aacafc0
+  test-conda-python-3.7-dask-latest: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export PYTHON=3.7 DASK=latest
+      - docker-compose pull --ignore-pull-failures conda-cpp
+      - docker-compose pull --ignore-pull-failures conda-python
+      - docker-compose build conda-cpp
+      - docker-compose build conda-python
+      - docker-compose build --no-cache conda-python-dask
+      - docker-compose run conda-python-dask
+
+    branch: ursabot-304-circle-test-conda-python-3.7-dask-latest
+    commit: 632799698a2848a7a2c7890096b92d19b0c86d2c
+  test-debian-10-cpp: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export DEBIAN=10
+      - docker-compose pull --ignore-pull-failures debian-cpp
+      - docker-compose build debian-cpp
+      - docker-compose run debian-cpp
+      - docker-compose push --ignore-push-failures debian-cpp
+
+    branch: ursabot-304-circle-test-debian-10-cpp
+    commit: 2b119439b4d1118c249dff58902230cbd432e9e8
+  test-debian-ruby: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - docker-compose pull --ignore-pull-failures debian-cpp
+      - docker-compose pull --ignore-pull-failures debian-c-glib
+      - docker-compose pull --ignore-pull-failures debian-ruby
+      - docker-compose build debian-cpp
+      - docker-compose build debian-c-glib
+      - docker-compose build debian-ruby
+      - docker-compose run debian-ruby
+      - docker-compose push --ignore-push-failures debian-ruby
+
+    branch: ursabot-304-circle-test-debian-ruby
+    commit: 37d8a07b81271bc1766c38facd6e7b5464bda14c
+  test-ubuntu-18.04-r-3.6: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export UBUNTU=18.04 R=3.6
+      - docker-compose pull --ignore-pull-failures ubuntu-cpp
+      - docker-compose pull --ignore-pull-failures ubuntu-r
+      - docker-compose build ubuntu-cpp
+      - docker-compose build ubuntu-r
+      - docker-compose run ubuntu-r
+      - docker-compose push --ignore-push-failures ubuntu-r
+
+    branch: ursabot-304-circle-test-ubuntu-18.04-r-3.6
+    commit: 1b8f4ca7e5b183256e64c59c6227199c075ddcb6
+  test-conda-r-3.6: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export R=3.6
+      - docker-compose pull --ignore-pull-failures conda-cpp
+      - docker-compose pull --ignore-pull-failures conda-r
+      - docker-compose build conda-cpp
+      - docker-compose build conda-r
+      - docker-compose run conda-r
+      - docker-compose push --ignore-push-failures conda-r
+
+    branch: ursabot-304-circle-test-conda-r-3.6
+    commit: 632d2ca0a9ef7c55c36067c5ed84d69bf734fb9e
+  test-conda-python-2.7-pandas-master: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export PYTHON=2.7 PANDAS=master
+      - docker-compose pull --ignore-pull-failures conda-cpp
+      - docker-compose pull --ignore-pull-failures conda-python
+      - docker-compose build conda-cpp
+      - docker-compose build conda-python
+      - docker-compose build --no-cache conda-python-pandas
+      - docker-compose run conda-python-pandas
+
+    branch: ursabot-304-circle-test-conda-python-2.7-pandas-master
+    commit: 4144010a6c620ffdd64bba9d7e9327e4d0d4d97e
+  test-conda-python-2.7-pandas-latest: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export PYTHON=2.7 PANDAS=latest
+      - docker-compose pull --ignore-pull-failures conda-cpp
+      - docker-compose pull --ignore-pull-failures conda-python
+      - docker-compose build conda-cpp
+      - docker-compose build conda-python
+      - docker-compose build --no-cache conda-python-pandas
+      - docker-compose run conda-python-pandas
+
+    branch: ursabot-304-circle-test-conda-python-2.7-pandas-latest
+    commit: 2d84a1d761cd71b013e513266ceb05e3e80ff58e
+  test-ubuntu-18.04-python-3: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export UBUNTU=18.04
+      - docker-compose pull --ignore-pull-failures ubuntu-cpp
+      - docker-compose pull --ignore-pull-failures ubuntu-python
+      - docker-compose build ubuntu-cpp
+      - docker-compose build ubuntu-python
+      - docker-compose build --no-cache ubuntu-python
+      - docker-compose run ubuntu-python
+
+    branch: ursabot-304-circle-test-ubuntu-18.04-python-3
+    commit: 90aabe3f5f9418c6bf4371313361fafabd94db16
+  test-conda-python-3.6: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export PYTHON=3.6
+      - docker-compose pull --ignore-pull-failures conda-cpp
+      - docker-compose pull --ignore-pull-failures conda-python
+      - docker-compose build conda-cpp
+      - docker-compose build conda-python
+      - docker-compose build --no-cache conda-python
+      - docker-compose run conda-python
+
+    branch: ursabot-304-circle-test-conda-python-3.6
+    commit: ddce7b51e2af8545806f3790445894c716317861
+  test-ubuntu-18.04-docs: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export UBUNTU=18.04
+      - docker-compose pull --ignore-pull-failures ubuntu-cpp
+      - docker-compose pull --ignore-pull-failures ubuntu-python
+      - docker-compose pull --ignore-pull-failures ubuntu-docs
+      - docker-compose build ubuntu-cpp
+      - docker-compose build ubuntu-python
+      - docker-compose build ubuntu-docs
+      - docker-compose run ubuntu-docs
+      - docker-compose push --ignore-push-failures ubuntu-docs
+
+    branch: ursabot-304-circle-test-ubuntu-18.04-docs
+    commit: 7b21c54e020c6063b46dc50272448f18d44e6e46
+  test-debian-c-glib: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - docker-compose pull --ignore-pull-failures debian-cpp
+      - docker-compose pull --ignore-pull-failures debian-c-glib
+      - docker-compose build debian-cpp
+      - docker-compose build debian-c-glib
+      - docker-compose run debian-c-glib
+      - docker-compose push --ignore-push-failures debian-c-glib
+
+    branch: ursabot-304-circle-test-debian-c-glib
+    commit: 689633352a8df5e7aff4a7a15d8c8196210fc852
+  test-conda-python-3.7-turbodbc-latest: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export PYTHON=3.7 TURBODBC=latest
+      - docker-compose pull --ignore-pull-failures conda-cpp
+      - docker-compose pull --ignore-pull-failures conda-python
+      - docker-compose build conda-cpp
+      - docker-compose build conda-python
+      - docker-compose build --no-cache conda-python-turbodbc
+      - docker-compose run conda-python-turbodbc
+
+    branch: ursabot-304-circle-test-conda-python-3.7-turbodbc-latest
+    commit: 940c1c3a64f0290da4209084a3229dbf1a903f15
+  test-debian-10-python-3: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export DEBIAN=10
+      - docker-compose pull --ignore-pull-failures debian-cpp
+      - docker-compose pull --ignore-pull-failures debian-python
+      - docker-compose build debian-cpp
+      - docker-compose build debian-python
+      - docker-compose build --no-cache debian-python
+      - docker-compose run debian-python
+
+    branch: ursabot-304-circle-test-debian-10-python-3
+    commit: 87209831f5579270ede23083f99e822961196054
+  test-conda-python-3.7-spark-master: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export PYTHON=3.7 SPARK=master
+      - docker-compose pull --ignore-pull-failures conda-cpp
+      - docker-compose pull --ignore-pull-failures conda-python
+      - docker-compose build conda-cpp
+      - docker-compose build conda-python
+      - docker-compose build --no-cache conda-python-spark
+      - docker-compose run conda-python-spark
+
+    branch: ursabot-304-circle-test-conda-python-3.7-spark-master
+    commit: c22cc956d888bebdceec3f2c06257c0006180bd2
+  test-conda-python-3.7: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export PYTHON=3.7
+      - docker-compose pull --ignore-pull-failures conda-cpp
+      - docker-compose pull --ignore-pull-failures conda-python
+      - docker-compose build conda-cpp
+      - docker-compose build conda-python
+      - docker-compose build --no-cache conda-python
+      - docker-compose run conda-python
+
+    branch: ursabot-304-circle-test-conda-python-3.7
+    commit: 6b1cebfbc0a122032eb79cf0da18f50230eb8503
+  test-debian-10-go-1.12: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export GO=1.12
+      - docker-compose pull --ignore-pull-failures debian-go
+      - docker-compose build debian-go
+      - docker-compose run debian-go
+      - docker-compose push --ignore-push-failures debian-go
+
+    branch: ursabot-304-circle-test-debian-10-go-1.12
+    commit: 88ce7e342f1cec12e29cab79ae29bc68d3ffe814
+  test-ubuntu-18.04-r-sanitizer: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - docker-compose pull --ignore-pull-failures ubuntu-r-sanitizer
+      - docker-compose build ubuntu-r-sanitizer
+      - docker-compose run ubuntu-r-sanitizer
+      - docker-compose push --ignore-push-failures ubuntu-r-sanitizer
+
+    branch: ursabot-304-circle-test-ubuntu-18.04-r-sanitizer
+    commit: 490a53e00ce69eb3c2755d238ce35c8872f416b2
+  test-ubuntu-18.04-cpp-cmake32: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - docker-compose pull --ignore-pull-failures ubuntu-cpp-cmake32
+      - docker-compose build ubuntu-cpp-cmake32
+      - docker-compose run ubuntu-cpp-cmake32
+      - docker-compose push --ignore-push-failures ubuntu-cpp-cmake32
+
+    branch: ursabot-304-circle-test-ubuntu-18.04-cpp-cmake32
+    commit: c9e6028ba2b70763fd55801ddcb161f683c67507
+  test-conda-python-3.7-pandas-latest: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export PYTHON=3.7 PANDAS=latest
+      - docker-compose pull --ignore-pull-failures conda-cpp
+      - docker-compose pull --ignore-pull-failures conda-python
+      - docker-compose build conda-cpp
+      - docker-compose build conda-python
+      - docker-compose build --no-cache conda-python-pandas
+      - docker-compose run conda-python-pandas
+
+    branch: ursabot-304-circle-test-conda-python-3.7-pandas-latest
+    commit: 09a1b1de082e88ee3377c8da24e380e81bdc8f2a
+  test-fedora-29-cpp: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export FEDORA=29
+      - docker-compose pull --ignore-pull-failures fedora-cpp
+      - docker-compose build fedora-cpp
+      - docker-compose run fedora-cpp
+      - docker-compose push --ignore-push-failures fedora-cpp
+
+    branch: ursabot-304-circle-test-fedora-29-cpp
+    commit: 6b17ada47bbf9b724cfcbfc19ac7a513dcfb691b
+  test-conda-python-3.7-dask-master: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export PYTHON=3.7 DASK=master
+      - docker-compose pull --ignore-pull-failures conda-cpp
+      - docker-compose pull --ignore-pull-failures conda-python
+      - docker-compose build conda-cpp
+      - docker-compose build conda-python
+      - docker-compose build --no-cache conda-python-dask
+      - docker-compose run conda-python-dask
+
+    branch: ursabot-304-circle-test-conda-python-3.7-dask-master
+    commit: 578b1efcace1d42652cf6f287ccabacefed5f4ae
+  test-ubuntu-14.04-cpp: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export UBUNTU=14.04
+      - docker-compose pull --ignore-pull-failures ubuntu-cpp
+      - docker-compose build ubuntu-cpp
+      - docker-compose run ubuntu-cpp
+      - docker-compose push --ignore-push-failures ubuntu-cpp
+
+    branch: ursabot-304-circle-test-ubuntu-14.04-cpp
+    commit: 094a8dd2760eb8d15f9221540fba1882a1487f21
+  test-fedora-29-python-3: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export FEDORA=29
+      - docker-compose pull --ignore-pull-failures fedora-cpp
+      - docker-compose pull --ignore-pull-failures fedora-python
+      - docker-compose build fedora-cpp
+      - docker-compose build fedora-python
+      - docker-compose build --no-cache fedora-python
+      - docker-compose run fedora-python
+
+    branch: ursabot-304-circle-test-fedora-29-python-3
+    commit: e16f1a4cbd799b6357f8b501dc8db45521b8b924
+  test-ubuntu-16.04-python-3: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export UBUNTU=16.04
+      - docker-compose pull --ignore-pull-failures ubuntu-cpp
+      - docker-compose pull --ignore-pull-failures ubuntu-python
+      - docker-compose build ubuntu-cpp
+      - docker-compose build ubuntu-python
+      - docker-compose build --no-cache ubuntu-python
+      - docker-compose run ubuntu-python
+
+    branch: ursabot-304-circle-test-ubuntu-16.04-python-3
+    commit: 9bf16010c71940a4af5bc6397e963ec36d9895e5
+  test-conda-python-3.7-pandas-master: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export PYTHON=3.7 PANDAS=master
+      - docker-compose pull --ignore-pull-failures conda-cpp
+      - docker-compose pull --ignore-pull-failures conda-python
+      - docker-compose build conda-cpp
+      - docker-compose build conda-python
+      - docker-compose build --no-cache conda-python-pandas
+      - docker-compose run conda-python-pandas
+
+    branch: ursabot-304-circle-test-conda-python-3.7-pandas-master
+    commit: cb431c64fbed78a6c23b7f400fd3e516e5b971b1
+  test-ubuntu-18.04-cpp-release: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - docker-compose pull --ignore-pull-failures ubuntu-cpp
+      - docker-compose build ubuntu-cpp
+      - docker-compose run -e ARROW_BUILD_TYPE=release ubuntu-cpp
+      - docker-compose push --ignore-push-failures ubuntu-cpp
+
+    branch: ursabot-304-circle-test-ubuntu-18.04-cpp-release
+    commit: a5f0f234dc32d1a5279fb8a3c467d625b0467eaa
+  test-conda-cpp: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - docker-compose pull --ignore-pull-failures conda-cpp
+      - docker-compose build conda-cpp
+      - docker-compose run conda-cpp
+      - docker-compose push --ignore-push-failures conda-cpp
+
+    branch: ursabot-304-circle-test-conda-cpp
+    commit: e31b135ccfa3be409c726a7c89777e73c6ef89bf
+  test-ubuntu-18.04-cpp: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export UBUNTU=18.04
+      - docker-compose pull --ignore-pull-failures ubuntu-cpp
+      - docker-compose build ubuntu-cpp
+      - docker-compose run ubuntu-cpp
+      - docker-compose push --ignore-push-failures ubuntu-cpp
+
+    branch: ursabot-304-circle-test-ubuntu-18.04-cpp
+    commit: 3162f95f4aee7124e94c2aa93c8c8dd241ce8d66
+  test-ubuntu-ruby: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - docker-compose pull --ignore-pull-failures ubuntu-cpp
+      - docker-compose pull --ignore-pull-failures ubuntu-c-glib
+      - docker-compose pull --ignore-pull-failures ubuntu-ruby
+      - docker-compose build ubuntu-cpp
+      - docker-compose build ubuntu-c-glib
+      - docker-compose build ubuntu-ruby
+      - docker-compose run ubuntu-ruby
+      - docker-compose push --ignore-push-failures ubuntu-ruby
+
+    branch: ursabot-304-circle-test-ubuntu-ruby
+    commit: a3a25495c74f01f18cf44ef5e5717854c208ef31
+  test-debian-10-rust-nightly-2019-09-25: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export RUST=nightly-2019-09-25
+      - docker-compose pull --ignore-pull-failures debian-rust
+      - docker-compose build debian-rust
+      - docker-compose run debian-rust
+      - docker-compose push --ignore-push-failures debian-rust
+
+    branch: ursabot-304-circle-test-debian-10-rust-nightly-2019-09-25
+    commit: 91bd75b52d8283064ec2f7e1f711537464b1ab38
+  test-conda-python-3.7-hdfs-2.9.2: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export PYTHON=3.7 HDFS=2.9.2
+      - docker-compose pull --ignore-pull-failures conda-cpp
+      - docker-compose pull --ignore-pull-failures conda-python
+      - docker-compose build conda-cpp
+      - docker-compose build conda-python
+      - docker-compose build conda-python-hdfs
+      - docker-compose run conda-python-hdfs
+
+    branch: ursabot-304-circle-test-conda-python-3.7-hdfs-2.9.2
+    commit: d326ee579005e762456c8d1bec0e1abc173aa051
+branch: ursabot-304
