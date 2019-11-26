@@ -1,0 +1,27 @@
+!Job
+target: !Target
+  head: 8fe1faaa23ff485c5dd52434ac60d08eb762d32a
+  email: ursabot@ci.ursalabs.org
+  branch: refs/pull/5867/merge
+  remote: https://github.com/apache/arrow
+  version: 0.15.0.dev341
+  no_rc_version: 0.15.0.dev341
+tasks:
+  test-conda-python-3.7-pandas-master: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export PYTHON=3.7 PANDAS=master
+      - docker-compose pull --ignore-pull-failures conda-cpp
+      - docker-compose pull --ignore-pull-failures conda-python
+      - docker-compose build conda-cpp
+      - docker-compose build conda-python
+      - docker-compose build --no-cache conda-python-pandas
+      - docker-compose run conda-python-pandas
+
+    branch: ursabot-357-circle-test-conda-python-3.7-pandas-master
+    commit: 5cdaf38e545d6ffcc6e619f5d1a721fd888641b7
+branch: ursabot-357
