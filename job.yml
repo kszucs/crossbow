@@ -1,0 +1,42 @@
+!Job
+target: !Target
+  head: 7a9319be13ae09abf4003e6e2bd5209fb6a6c314
+  email: ursabot@ci.ursalabs.org
+  branch: refs/pull/5996/merge
+  remote: https://github.com/apache/arrow
+  version: 0.15.0.dev414
+  no_rc_version: 0.15.0.dev414
+tasks:
+  test-ubuntu-fuzzit-fuzzing: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - docker-compose pull --ignore-pull-failures ubuntu-cpp
+      - docker-compose pull --ignore-pull-failures ubuntu-fuzzit
+      - docker-compose build ubuntu-cpp
+      - docker-compose build ubuntu-fuzzit
+      - docker-compose run -e FUZZIT_JOB_TYPE=fuzzing ubuntu-fuzzit
+
+    branch: ursabot-393-circle-test-ubuntu-fuzzit-fuzzing
+    commit: 784c5c19416c9c7240f7eb973e2b248f8b7fd29e
+  test-ubuntu-fuzzit-regression: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - docker-compose pull --ignore-pull-failures ubuntu-cpp
+      - docker-compose pull --ignore-pull-failures ubuntu-fuzzit
+      - docker-compose build ubuntu-cpp
+      - docker-compose build ubuntu-fuzzit
+      - docker-compose run -e FUZZIT_JOB_TYPE=regression ubuntu-fuzzit
+
+  ############################## Integration tests ############################
+
+    branch: ursabot-393-circle-test-ubuntu-fuzzit-regression
+    commit: 4e5b190b684e2e678bb17e59dfb63f7d6a3f6bc0
+branch: ursabot-393
