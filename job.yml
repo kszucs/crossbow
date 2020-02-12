@@ -1,0 +1,44 @@
+!Job
+target: !Target
+  head: cffb9307846121e8494e45308e72f2f0e9493a7b
+  email: ursabot@ci.ursalabs.org
+  branch: refs/pull/6316/merge
+  remote: https://github.com/apache/arrow
+  version: 0.16.0.dev62
+  no_rc_version: 0.16.0.dev62
+tasks:
+  test-conda-python-3.7-spark-master: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export PYTHON=3.7 SPARK=master
+      - docker-compose pull --ignore-pull-failures conda-cpp
+      - docker-compose pull --ignore-pull-failures conda-python
+      - docker-compose build conda-cpp
+      - docker-compose build conda-python
+      - docker-compose build --no-cache conda-python-spark
+      - docker-compose run conda-python-spark
+
+    branch: ursabot-505-circle-test-conda-python-3.7-spark-master
+    commit: dabea0a6cb14af6a86cfb93650cfd3024f373f08
+  test-conda-python-3.6-spark-2.4.4: !Task
+    ci: circle
+    platform: linux
+    template: docker-tests/circle.linux.yml
+    artifacts: []
+    params:
+      commands:
+      - export PYTHON=3.6 SPARK="v2.4.4"
+      - docker-compose pull --ignore-pull-failures conda-cpp
+      - docker-compose pull --ignore-pull-failures conda-python
+      - docker-compose build conda-cpp
+      - docker-compose build conda-python
+      - docker-compose build --no-cache conda-python-spark
+      - docker-compose run conda-python-spark
+
+    branch: ursabot-505-circle-test-conda-python-3.6-spark-2.4.4
+    commit: 6c901f0afe5ff03e4fd17bd12b5ad5bab9e19e1a
+branch: ursabot-505
