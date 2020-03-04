@@ -1,0 +1,68 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+name: Report
+
+on:
+  # TODO(kszucs): remove push and pull_requests once the report works
+  push:
+    paths:
+      - '.github/workflows/nightly_report.yml'
+  pull_request:
+    paths:
+      - '.github/workflows/nightly_report.yml'
+  schedule:
+    - cron: '0 10 * * *'
+
+jobs:
+
+  nightly-report:
+    name: Submit Nightly Report
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Arrow
+        uses: actions/checkout@v2
+        with:
+          path: arrow
+      - name: Checkout Crossbow
+        uses: actions/checkout@v2
+        with:
+          repository: "ursa-labs/crossbow"
+          path: crossbow
+      - name: Setup Conda
+        uses: s-weigand/setup-conda@v1
+        with:
+          conda-channels: "conda-forge"
+      - name: Install Dependencies
+        shell: bash
+        run: conda install -y --file arrow/ci/conda_env_crossbow.txt
+      - name: Submit Nightlies
+        shell: bash
+        env:
+          CROSSBOW_GITHUB_TOKEN: ${{ secrets.CROSSBOW_GITHUB_TOKEN }}
+          CROSSBOW_REPORT_SMTP_USER: ${{ secrets.CROSSBOW_SMTP_USER }}
+          CROSSBOW_REPORT_SMTP_PASSWORD: ${{ secrets.CROSSBOW_SMTP_PASSWORD }}
+        run: |
+          today=$(date -I)
+          today='2020-01-11'  # just for testing
+          job_id=$(arrow/dev/tasks/crossbow.py latest-prefix ${today})
+          arrow/dev/tasks/crossbow.py report \
+            --send --poll --poll-max-minutes 120 \
+            --sender-name Crossbow \
+            --sender-email 'crossbow@ursalabs.org' \
+            --recipient-email 'szucs.krisztian@gmail.com' \
+            ${job_id}
