@@ -1,0 +1,68 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# NOTE: must set "Crossbow" as name to have the badge links working in the
+# github comment reports!
+name: Crossbow
+
+on:
+  push:
+    branches:
+      - "*-github-*"
+
+jobs:
+  verify:
+    name: "Fix all the things"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Arrow
+        env:
+          CROSSBOW_GITHUB_TOKEN: ${{ secrets.CROSSBOW_GITHUB_TOKEN }}
+        run: |
+          REMOTE=`echo "https://github.com/nealrichardson/arrow.git" | sed -e 's/github.com/x-access-token:'"$CROSSBOW_GITHUB_TOKEN"'@github.com'`
+          git clone --no-checkout "$REMOTE" arrow
+          git -C arrow fetch -t "$REMOTE" autotune
+          git -C arrow checkout autotune
+          git -C arrow submodule update --init --recursive
+      - name: See what is different
+        run: |
+          set -ex
+          cd arrow
+          changed() {
+            git diff --name-only HEAD^.. | grep -e "$1" >/dev/null 2>&1
+          }
+          if changed '^r/.*\.R$'; then
+            echo ".R changed"
+            echo "::set-env name=R_DOCS::true"
+          fi
+      - uses: r-lib/actions/setup-r@v1
+        if: env.R_DOCS == 'true'
+      - name: Update R docs
+        if: env.R_DOCS == 'true'
+        shell: Rscript
+        run: |
+          source("arrow/ci/etc/rprofile")
+          install.packages(c("remotes", "roxygen2"))
+          remotes::install_deps("arrow/r")
+          roxygen2::roxygenize("arrow/r")
+      - name: Commit results
+        run: |
+          cd arrow
+          git config user.name "$(git log -1 --pretty=format:%an)"
+          git config user.email "$(git log -1 --pretty=format:%ae)"
+          git commit -a -m 'Fix all the things [automated commit]' || echo "No changes to commit"
+          git push origin autotune || echo "No changes to commit"
