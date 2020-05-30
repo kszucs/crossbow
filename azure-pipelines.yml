@@ -1,0 +1,26 @@
+jobs:
+- job: linux
+  pool:
+    vmImage: ubuntu-18.04
+  timeoutInMinutes: 360
+
+  steps:
+  - script: |
+      git clone --no-checkout https://github.com/xhochy/arrow.git arrow
+      git -C arrow fetch -t https://github.com/xhochy/arrow.git ARROW-8941
+      git -C arrow checkout FETCH_HEAD
+      git -C arrow submodule update --init --recursive
+    displayName: Clone arrow
+
+  - script: |
+      conda install -y -c conda-forge mamba pandas
+    displayName: Install requirements
+
+  - script: |
+      
+      eval $(conda shell.posix hook)
+      conda activate bash
+      echo $(which python)
+      echo $(which python3)
+      python3 arrow/dev/tasks/conda-recipes/clean.py 
+    displayName: Delete outdated packages
